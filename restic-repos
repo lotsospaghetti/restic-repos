@@ -1,0 +1,45 @@
+#!/bin/bash
+
+export RESTIC_REPOS_DIR=/usr/local/etc
+
+if [[ "$(whoami)" != "root" ]]; then echo "This command must be run as root." 1>&2; exit 0; fi
+
+if [[ "$1" == "lsrepo" ]]; then echo "$(ls $RESTIC_REPOS_DIR/restic-repos -1I README*)"; exit 0; fi
+
+set -e
+
+repodir=$RESTIC_REPOS_DIR/restic-repos/$1
+
+if [[ "$2" == "init" && ! -d "$repodir" ]]; then
+    mkdir -p "$repodir"
+    cp -r "$RESTIC_REPOS_DIR/restic-repos/.default/." "$repodir/."
+    chmod 700 "$repodir/env"
+    ${EDITOR:-${VISUAL:-vi}} "$repodir/env"
+fi
+
+if [[ ! -d "$repodir" ]]; then echo "Invalid repository given." 1>&2; exit 0; fi
+if [[ "$#" -lt 2 ]]; then printf "Usage: restic-repos REPO [restic args] or restic-repos lsrepo\nSee README for more help." 1>&2; exit 0; fi
+
+source "$repodir/env"
+if [[ -z "$RESTIC_PASSWORD_FILE" ]]; then 
+    export RESTIC_PASSWORD_FILE="$repodir/key"
+    if [[ "$2" == "init" && ! -e "$RESTIC_PASSWORD_FILE" ]]; then
+        gpg --armor --gen-random 1 64 | base64 >> "$repodir/key"
+        chmod 600 "$repodir/key"
+    fi
+fi
+
+if [[ "$2" == "autobackup" ]]; then
+    if [[ -n $(pgrep "restic" | grep "restic backup") ]]; then echo "restic backup is already running..." 1>&2; exit 0; fi
+    
+    restic unlock
+    restic backup --files-from-verbatim "$repodir/includes.conf" --exclude-file="$repodir/excludes.conf" --tag "autobackup"
+    restic check --with-cache --read-data-subset=5G
+    restic forget --host "$HOSTNAME" --tag "autobackup" --prune --keep-hourly 24 --keep-daily 30 --keep-monthly 6 --keep-weekly 4 --keep-yearly 3
+elif [[ "$2" == "edit" ]]; then
+    if [[ -w "$repodir/$3" ]]; then ${EDITOR:-${VISUAL:-vi}} "$repodir/$3"
+    elif [[ -w "$repodir/$3.conf" ]]; then ${EDITOR:-${VISUAL:-vi}} "$repodir/$3.conf"
+    else echo "Not a valid config..." 1>&2; exit 0; fi;
+else
+    exec restic "${@:2}"
+fi
