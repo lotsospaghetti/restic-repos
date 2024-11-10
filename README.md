@@ -12,7 +12,7 @@ This is more or less my scrappy method of managing multiple restic repositories 
 
 - You'll obviously need [restic](https://github.com/restic/restic) installed first, as well as `gpg` to automatically manage password files.
 - Make `restic-repos` script executable and put it in your PATH.
-- Create a folder named `restic-repos` somewhere, place `.default` folder there, and edit the `$RESTIC_REPOS_DIR` variable in `restic-repos` script to point here.
+- Place the `restic-repos.d` folder somewhere and edit the `$RESTIC_REPOS_DIR` variable in `restic-repos` script to point here.
 
 ## Usage
 
