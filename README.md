@@ -4,37 +4,50 @@ This is more or less my scrappy method of managing multiple restic repositories 
 
 ## TODOS
 - [ ] Write installer for new hosts
-- [ ] Handle PGP-encrypted password files using `$RESTIC_PASSWORD_COMMAND`
+- [ ] Handle PGP-encrypted password files using `$RESTIC_PASSWORD_COMMAND` (e.g. for use with Yubikeys)
 - [ ] Write systemd and cron schedulers for autobackup
 - [ ] Compatibility with non-Linux hosts
+- [ ] Improve cloud autobackup (specifically Backblaze b2)
+- [ ] Add ability to run autobackups on all repos with one command
 
 ## Installation (manual)
 
-- You'll obviously need [restic](https://github.com/restic/restic) installed first, as well as `gpg` to automatically manage password files.
+- You'll obviously need [restic](https://github.com/restic/restic) installed first, as well as [GnuPG](https://github.com/gpg/gnupg) to automatically manage password files.
 - Make `restic-repos` script executable and put it in your PATH.
 - Place the `restic-repos.d` folder somewhere and edit the `$RESTIC_REPOS_DIR` variable in `restic-repos` script to point here.
+- Schedule a cron job or timer to call `restic-repos REPO autobackup` every so often
 
 ## Usage
 
-Initialize a new repository:
+Output of `restic-repos help`:
 
-```restic-repos NEWREPO init```
+```
+restic-repos is a wrapper script for the restic backup program. It aims to help manage
+multiple repositories (here shortened to just 'repos') by sourcing the unique environment and
+configuration files associated with each repo managed by this script.
 
-Edit config files (see *Configuration*):
+Usage:
+  restic-repos REPO SCRIPT_COMMAND [OPTIONS]
+  restic-repos REPO RESTIC_COMMAND [RESTIC_OPTIONS]...
+  restic-repos SCRIPT_COMMAND
+Run a script or restic command with specified repo, initialize a new repo, or run a script option.
 
-```restic-repos REPO edit [env/excludes/includes]```
+Script commands:
 
-Manage restic repositories using standard restic arguments:
+  REPO specified:
+  autobackup        Run backup with sourced repo files, intended mostly for use in cron/timer tasks
+  edit              Edit configuration files for a repo. Must specify one of the following options:
+    env, excludes, includes
+  init              Initialize and configure a new repo using REPO as its name
+  [restic commands] Pass commands and flags to restic with sourced repo files
 
-```restic-repos REPO [args]```
+  REPO not specified:
+  lsrepo, -l        List all managed repository names
+  help, -h          Print this help message
 
-List all configured repositories with `lsrepo`:
-
-```restic-repos lsrepo```
-
-Put this command in [timers](https://wiki.archlinux.org/title/Restic#Scheduling) or cron jobs to use automated backups and snapshot management, or invoke it manually to create an autobackup snapshot:
-
-```restic-repos REPO autobackup```
+Also see official restic documentation for info on the actual program:
+  "restic help", "man restic", or https://restic.readthedocs.io
+```
 
 ## Configuration
 

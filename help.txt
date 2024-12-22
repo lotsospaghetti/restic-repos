@@ -1,0 +1,25 @@
+restic-repos is a wrapper script for the restic backup program. It aims to help manage
+multiple repositories (here shortened to just 'repos') by sourcing the unique environment and
+configuration files associated with each repo managed by this script.
+
+Usage:
+  restic-repos REPO SCRIPT_COMMAND [OPTIONS]
+  restic-repos REPO RESTIC_COMMAND [RESTIC_OPTIONS]...
+  restic-repos SCRIPT_COMMAND
+Run a script or restic command with specified repo, initialize a new repo, or run a script option.
+
+Script commands:
+
+  REPO specified:
+  autobackup        Run backup with sourced repo files, intended mostly for use in cron/timer tasks
+  edit              Edit configuration files for a repo. Must specify one of the following options:
+    env, excludes, includes
+  init              Initialize and configure a new repo using REPO as its name
+  [restic commands] Pass commands and flags to restic with sourced repo files
+
+  REPO not specified:
+  lsrepo, -l        List all managed repository names
+  help, -h          Print this help message
+
+Also see official restic documentation for info on the actual program:
+  "restic help", "man restic", or https://restic.readthedocs.io
